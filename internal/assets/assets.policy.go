@@ -9,6 +9,10 @@ type UploadPolicy struct {
 type AssetCategory string
 
 const (
+	KB = 1 << 10 // 1024
+	MB = 1 << 20 // 1.048.576
+)
+const (
 	CategoryProfile  AssetCategory = "avatars"
 	CategoryDocument AssetCategory = "document"
 	CategoryPost     AssetCategory = "post"

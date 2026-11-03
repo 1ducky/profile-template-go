@@ -2,6 +2,8 @@ package profile
 
 import (
 	"context"
+	"fmt"
+	"path/filepath"
 	"profile-template/internal/app/uow"
 	"profile-template/internal/assets"
 	"profile-template/internal/contextapp"
@@ -52,4 +54,31 @@ func (p *ProfileApp) UpdateProfile(ctx context.Context, req UpdateProfileRequest
 		return err
 	}
 	return nil
+}
+
+func (p *ProfileApp) UploadAvatar(ctx context.Context, req UploadAvatarRequest) (profileAvatarResource, error) {
+	if req.id == "" {
+		return profileAvatarResource{}, profile.ErrNotFound
+	}
+	var AssetInfo assets.AssetMetaData
+	err := p.uow.Do(ctx, func(ctx context.Context, r TXUsecase) error {
+		res, err := r.Asset.Upload(ctx, req.reader, assets.UploadPolicy{Category: assets.CategoryProfile, MaxSize: 2 * assets.MB, UserID: req.id})
+		if err != nil {
+			return err
+		}
+		AssetInfo = res
+		err = r.Profile.UploadAvatar(ctx, req.id, res.FileKey)
+		if err != nil {
+			return err
+		}
+		err = r.Asset.ReleaseByParentID(ctx, []string{req.id})
+		err = r.Asset.LinkingAsset(ctx, []string{res.ID}, req.id)
+		return err
+	})
+
+	AssetInfo.FileKey = filepath.ToSlash(AssetInfo.FileKey)
+	fmt.Print("after Commit")
+	fmt.Print(AssetInfo)
+
+	return profileAvatarResource{Metadata: AssetInfo, Avatar: AssetInfo.FileKey}, err
 }

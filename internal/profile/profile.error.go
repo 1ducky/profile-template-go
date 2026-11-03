@@ -11,6 +11,7 @@ var (
 	ErrInvalidUsername    = errors.New("invalid username")
 	ErrTagAlreadyAssigned = errors.New("tag already assigned")
 	ErrInvalidInput       = errors.New("invalid input profile")
+	ErrInvalidAvatar      = errors.New("invalid avatar path")
 )
 
 const (
@@ -18,4 +19,5 @@ const (
 	CodeTagAlreadyAssigned err.ErrCode = "TAG_ALREADY_ASSIGNED"
 	CodeInvalidUsername    err.ErrCode = "INVALID_USERNAME"
 	CodeInvalidInput       err.ErrCode = "INVALID_INPUT"
+	CodeInvalidAvatar      err.ErrCode = "INVALID_AVATAR"
 )

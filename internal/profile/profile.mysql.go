@@ -89,3 +89,19 @@ func (r *MySQLRepository) GetUserByID(ctx context.Context, id string) (Profile, 
 func (r *MySQLRepository) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
+
+func (r *MySQLRepository) SetProfilePhoto(ctx context.Context, id string, path string) error {
+	var sqlQuery []string
+
+	command := "UPDATE"
+	setStr := "SET"
+	where := "WHERE"
+	sqlQuery = append(sqlQuery, command, string(TABLE), setStr, strings.Join(db.MakeSet([]db.Collom{AVATAR_URL}), ","), where, string(ID), "=?")
+	query := strings.Join(sqlQuery, " ")
+	_, err := r.db.ExecContext(ctx, query, path, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

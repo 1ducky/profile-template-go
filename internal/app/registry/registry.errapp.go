@@ -47,6 +47,7 @@ func NewErrRegistry(keys RegisterErr) *err.ErrApp {
 		{Err: profile.ErrTagAlreadyAssigned, Code: profile.CodeTagAlreadyAssigned, StatusCode: 400, Message: "Tag already assigned"},
 		{Err: profile.ErrInvalidUsername, Code: profile.CodeInvalidUsername, StatusCode: 400, Message: "Invalid username"},
 		{Err: profile.ErrInvalidInput, Code: profile.CodeInvalidInput, StatusCode: 400, Message: "Invalid input"},
+		{Err: profile.ErrInvalidAvatar, Code: profile.CodeInvalidAvatar, StatusCode: 400, Message: "Invalid avatar"},
 		{Err: auth.ErrUnauthorized, Code: auth.CodeUnauthorized, StatusCode: 401, Message: "Unauthorized"},
 		{Err: auth.ErrTokenInvalid, Code: auth.CodeTokenInvalid, StatusCode: 401, Message: "Invalid token"},
 		{Err: auth.ErrTokenExpired, Code: auth.CodeTokenExpired, StatusCode: 401, Message: "Token expired"},

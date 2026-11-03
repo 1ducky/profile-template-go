@@ -32,5 +32,6 @@ func routeAuth(mux *http.ServeMux, handler authApp.Handler, adapter *transport.A
 func routeProfile(mux *http.ServeMux, handler profileApp.Handler, adapter *transport.Adapter) {
 	mux.HandleFunc("GET /profile", adapter.Adapt(handler.GetOwnProfile, err.Profile))
 	mux.HandleFunc("PATCH /profile", adapter.Adapt(handler.UpdateProfile, err.Profile))
+	mux.HandleFunc("POST /profile/avatar", adapter.Adapt(handler.UploadAvatar, err.Profile))
 	mux.HandleFunc(strings.ReplaceAll("GET /profile/{*}", "*", profileApp.DynamicIDPath), adapter.Adapt(handler.GetProfileByID, err.Profile))
 }

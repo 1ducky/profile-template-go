@@ -70,8 +70,14 @@ func (uc *Usecase) DeleteUser(ctx context.Context, id string) error {
 	return nil
 }
 
-func (uc *Usecase) UploadAvatar(ctx context.Context, id string) error {
-	return nil
+func (uc *Usecase) UploadAvatar(ctx context.Context, id string, path string) error {
+	if id == "" {
+		return ErrNotFound
+	}
+	if path == "" {
+		return ErrInvalidAvatar
+	}
+	return uc.repo.SetProfilePhoto(ctx, id, path)
 }
 
 func (uc *Usecase) UploadCover(ctx context.Context, id string) error {

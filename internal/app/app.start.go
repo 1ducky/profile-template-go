@@ -9,6 +9,7 @@ import (
 	"profile-template/internal/app/registry"
 	"profile-template/internal/config"
 	"profile-template/internal/db"
+	"profile-template/internal/localstorage"
 	"profile-template/internal/transport"
 	"syscall"
 	"time"
@@ -26,6 +27,11 @@ func StartApp() {
 	if err != nil {
 		panic(err)
 	}
+	bucket, err := localstorage.NewLocalStorage(cfg.StorageConfig)
+	log.Print("initalize Storage")
+	if err != nil {
+		panic(err)
+	}
 
 	// Registry
 	log.Print("Creating Err Registry")
@@ -33,9 +39,11 @@ func StartApp() {
 	log.Print("Creating Adapter")
 	adapter := transport.NewAdapter(errs)
 	log.Print("Creating Repo")
-	repos := registry.NewRegisterRepo(db, cfg)
+	persistent := registry.NewRegisterPersistent(db, bucket)
 	log.Print("Creating UC")
-	ucs := registry.NewRegisterUC(repos)
+	repos := registry.NewRegisterRepo(persistent, cfg)
+	log.Print("Creating UC")
+	ucs := registry.NewRegisterUC(repos, cfg)
 	log.Print("Creating UoW")
 	uows := registry.NewUoWCase(db, cfg)
 	log.Print("Creating App")

@@ -3,6 +3,7 @@ package registry
 import (
 	"net/http"
 	"profile-template/internal/app/err"
+	assetsApp "profile-template/internal/app/services/assets"
 	authApp "profile-template/internal/app/services/auth"
 	profileApp "profile-template/internal/app/services/profile"
 	"profile-template/internal/transport"
@@ -14,6 +15,7 @@ func NewRegisterRoutes(handlers RegisterHandler, uc RegisterUC, adapter *transpo
 	mux := http.NewServeMux()
 	routeAuth(mux, handlers.AuthHandler, adapter)
 	routeProfile(mux, handlers.ProfileHandler, adapter)
+	routeAssets(mux, handlers.AssetsHandler, adapter)
 
 	return middleware.Chain(
 		mux,
@@ -34,4 +36,7 @@ func routeProfile(mux *http.ServeMux, handler profileApp.Handler, adapter *trans
 	mux.HandleFunc("PATCH /profile", adapter.Adapt(handler.UpdateProfile, err.Profile))
 	mux.HandleFunc("POST /profile/avatar", adapter.Adapt(handler.UploadAvatar, err.Profile))
 	mux.HandleFunc(strings.ReplaceAll("GET /profile/{*}", "*", profileApp.DynamicIDPath), adapter.Adapt(handler.GetProfileByID, err.Profile))
+}
+func routeAssets(mux *http.ServeMux, handler assetsApp.Handler, adapter *transport.Adapter) {
+	mux.HandleFunc(strings.ReplaceAll("GET /assets/{*...}", "*", assetsApp.KEY), adapter.Adapt(handler.ServeAssets, err.Assets))
 }

@@ -56,7 +56,7 @@ func (u *Usecase) Upload(ctx context.Context, r io.Reader, upload UploadPolicy) 
 	if err != nil {
 		return AssetMetaData{}, err
 	}
-
+	entity.FileKey = fullpath
 	// Record
 	err = u.AssetRepo.Record(ctx, RecordPayload{ID: entity.ID, Status: entity.Status, FileKey: entity.FileKey, Filename: entity.Filename, Mime: entity.Mime, AuthorID: entity.AuthorID, Category: entity.Category})
 	if err != nil {
@@ -81,6 +81,7 @@ func (u *Usecase) Upload(ctx context.Context, r io.Reader, upload UploadPolicy) 
 	if err != nil {
 		return AssetMetaData{}, err
 	}
+	entity.Status = AssetStatusActive
 	return entity, nil
 }
 

@@ -1,9 +1,15 @@
 package assets
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"profile-template/internal/assets"
+	"profile-template/internal/auth"
+	"profile-template/internal/contextapp"
+	"profile-template/internal/profile"
+	"profile-template/internal/transport"
 )
 
 type Handler struct {
@@ -34,4 +40,31 @@ func (h *Handler) ServeAssets(w http.ResponseWriter, r *http.Request) error {
 	w.Write(data)
 
 	return nil
+}
+
+func (h *Handler) UploadAvatar(w http.ResponseWriter, r *http.Request) error {
+	user, ok := contextapp.GetAuth(r.Context())
+	if !ok {
+		return auth.ErrUnauthorized
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 2*assets.MB)
+
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "file tidak ditemukan: "+err.Error(), http.StatusBadRequest)
+		return profile.ErrInvalidAvatar
+	}
+	defer file.Close()
+
+	// file adalah multipart.File, sudah memenuhi io.Reader
+	// header berisi metadata: header.Filename, header.Size, header.Header
+	fmt.Println(header.Filename, header.Size)
+
+	// 3. Pakai sebagai io.Reader
+	res, err := h.AssetApp.UploadPublicAssets(r.Context(), UploadPublicAssetsReq{UserID: user.ID, Reader: file})
+	if err != nil {
+		return err
+	}
+	return json.NewEncoder(w).Encode(transport.Response[AssetsUploadRes]{Status: transport.StatusSuccess, Data: res})
+
 }

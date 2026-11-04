@@ -39,4 +39,5 @@ func routeProfile(mux *http.ServeMux, handler profileApp.Handler, adapter *trans
 }
 func routeAssets(mux *http.ServeMux, handler assetsApp.Handler, adapter *transport.Adapter) {
 	mux.HandleFunc(strings.ReplaceAll("GET /assets/{*...}", "*", assetsApp.KEY), adapter.Adapt(handler.ServeAssets, err.Assets))
+	mux.HandleFunc("POST /assets/upload", adapter.Adapt(handler.UploadAvatar, err.Assets))
 }

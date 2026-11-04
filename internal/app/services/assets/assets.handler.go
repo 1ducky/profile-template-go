@@ -8,7 +8,6 @@ import (
 	"profile-template/internal/assets"
 	"profile-template/internal/auth"
 	"profile-template/internal/contextapp"
-	"profile-template/internal/profile"
 	"profile-template/internal/transport"
 )
 
@@ -52,13 +51,13 @@ func (h *Handler) UploadAvatar(w http.ResponseWriter, r *http.Request) error {
 	file, header, err := r.FormFile("image")
 	if err != nil {
 		http.Error(w, "file tidak ditemukan: "+err.Error(), http.StatusBadRequest)
-		return profile.ErrInvalidAvatar
+		return assets.ErrAssetNotFound
 	}
 	defer file.Close()
 
 	// file adalah multipart.File, sudah memenuhi io.Reader
 	// header berisi metadata: header.Filename, header.Size, header.Header
-	fmt.Println(header.Filename, header.Size)
+	fmt.Println("metadata", header.Filename, header.Size)
 
 	// 3. Pakai sebagai io.Reader
 	res, err := h.AssetApp.UploadPublicAssets(r.Context(), UploadPublicAssetsReq{UserID: user.ID, Reader: file})

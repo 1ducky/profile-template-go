@@ -47,13 +47,13 @@ func (h *Handler) UploadAvatar(w http.ResponseWriter, r *http.Request) error {
 		return auth.ErrUnauthorized
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 2*assets.MB)
-
+	fmt.Println("Limit Reader")
 	file, header, err := r.FormFile("image")
 	if err != nil {
-		http.Error(w, "file tidak ditemukan: "+err.Error(), http.StatusBadRequest)
 		return assets.ErrAssetNotFound
 	}
 	defer file.Close()
+	fmt.Println("Get Reader")
 
 	// file adalah multipart.File, sudah memenuhi io.Reader
 	// header berisi metadata: header.Filename, header.Size, header.Header

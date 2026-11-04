@@ -18,6 +18,7 @@ type UsecaseContract interface {
 	LinkingAsset(ctx context.Context, assetID []string, parentID string) error
 	ReadByParentID(ctx context.Context, parentID []string) ([]AssetMetaData, error)
 	ReleaseByParentID(ctx context.Context, parentIDs []string) error
+	ReleaseByFileKeys(ctx context.Context, fileKeys []string) error
 }
 
 type AssetRepository interface {
@@ -28,4 +29,5 @@ type AssetRepository interface {
 	ReadByParentID(ctx context.Context, parentID []string) ([]AssetMetaData, error)
 	LinkingAsset(ctx context.Context, assetID []string, parentID string) error
 	ReleaseByParentID(ctx context.Context, parentIDs []string) error
+	ReleaseByFileKeys(ctx context.Context, FileKey []string) error
 }

@@ -126,3 +126,20 @@ func (f *FakeRepo) ReleaseByParentID(ctx context.Context, parentIDs []string) er
 	}
 	return nil
 }
+func (f *FakeRepo) ReleaseByFileKeys(ctx context.Context, fileKeys []string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	var assetIDs []string
+	for _, asset := range f.assets {
+		if slices.Contains(fileKeys, asset.FileKey) {
+			asset.ParentID = ""
+			asset.UpdatedAt = time.Now()
+			f.assets[asset.ID] = asset
+			assetIDs = append(assetIDs, asset.ID)
+		}
+	}
+	if len(assetIDs) == 0 {
+		return ErrAssetNotFound
+	}
+	return nil
+}

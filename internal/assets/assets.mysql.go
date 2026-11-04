@@ -171,3 +171,19 @@ func (r *MysqlRepo) ReleaseByParentID(ctx context.Context, parentIDs []string) e
 	}
 	return nil
 }
+func (r *MysqlRepo) ReleaseByFileKeys(ctx context.Context, fileKeys []string) error {
+	if len(fileKeys) == 0 {
+		return ErrAssetNotFound
+	}
+	inPH := db.MakePlaceHolder(len(fileKeys))
+	query := `UPDATE ` + string(TABLE) + ` SET ` + string(PARENT_ID) + ` = NULL WHERE ` + string(FILE_KEY) + ` IN (` + strings.Join(inPH, ",") + `)`
+	res, err := r.DB.ExecContext(ctx, query, db.ToArgs(fileKeys)...)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil || rowsAffected < 1 {
+		return ErrAssetNotFound
+	}
+	return nil
+}

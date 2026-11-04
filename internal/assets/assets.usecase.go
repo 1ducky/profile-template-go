@@ -191,3 +191,19 @@ func (u *Usecase) ReleaseByParentID(ctx context.Context, parentID []string) erro
 	}
 	return nil
 }
+func (u *Usecase) ReleaseByFileKeys(ctx context.Context, fileKeys []string) error {
+	validFileKeys := utils.MapField(fileKeys, func(s string) (string, bool) {
+		if s != "" {
+			return s, true
+		}
+		return "", false
+	})
+	if len(validFileKeys) == 0 {
+		return ErrAssetNotFound
+	}
+	err := u.AssetRepo.ReleaseByFileKeys(ctx, validFileKeys)
+	if err != nil {
+		return err
+	}
+	return nil
+}

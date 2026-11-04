@@ -39,3 +39,6 @@ func (r *Repo) LinkingAsset(ctx context.Context, assetID []string, parentID stri
 func (r *Repo) ReleaseByParentID(ctx context.Context, parentIDs []string) error {
 	return nil
 }
+func (r *Repo) ReleaseByFileKeys(ctx context.Context, parentIDs []string) error {
+	return nil
+}

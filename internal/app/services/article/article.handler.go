@@ -3,31 +3,32 @@ package article
 import (
 	"encoding/json"
 	"net/http"
+	"profile-template/internal/article"
 	"profile-template/internal/contextapp"
 	"profile-template/internal/transport"
 	"profile-template/internal/utils"
 )
 
 type Handler struct {
-	uc ArticleUsecaseContract
+	app ArticleApp
 }
 
-func NewHandler(uc ArticleUsecaseContract) *Handler {
-	return &Handler{uc: uc}
+func NewHandler(app ArticleApp) *Handler {
+	return &Handler{app: app}
 }
 
 // POST /articles
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) error {
 	auth, ok := contextapp.GetAuth(r.Context())
 	if !ok {
-		return ErrUnauthenticated
+		return article.ErrUnauthenticated
 	}
-	var body CreateArticleBody
-	if err := utils.DecodeJSON(w, r, &body, MAXSIZEREAD); err != nil {
-		return ErrBadRequest
+	var body article.CreateArticleBody
+	if err := utils.DecodeJSON(w, r, &body, article.MAXSIZEREAD); err != nil {
+		return article.ErrBadRequest
 	}
 
-	a, err := h.uc.Create(r.Context(), CreateInput{
+	a, err := h.app.CreateArticle(r.Context(), article.CreateInput{
 		AuthorID:  auth.ID,
 		Title:     body.Title,
 		Excerpt:   body.Excerpt,
@@ -42,21 +43,21 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	return json.NewEncoder(w).Encode(transport.Response[ArticleEntity]{Status: transport.StatusSuccess, Data: *a})
+	return json.NewEncoder(w).Encode(transport.Response[article.ArticleEntity]{Status: transport.StatusSuccess, Data: a})
 }
 
 // PATCH /articles/{id}
 func (h *Handler) update(w http.ResponseWriter, r *http.Request) error {
 	auth, ok := contextapp.GetAuth(r.Context())
 	if !ok {
-		return ErrUnauthenticated
+		return article.ErrUnauthenticated
 	}
-	var body UpdateArticleBody
-	if err := utils.DecodeJSON(w, r, &body, MAXSIZEREAD); err != nil {
-		return ErrBadRequest
+	var body article.UpdateArticleBody
+	if err := utils.DecodeJSON(w, r, &body, article.MAXSIZEREAD); err != nil {
+		return article.ErrBadRequest
 	}
 
-	err := h.uc.Update(r.Context(), UpdateInput{
+	err := h.app.UpdateArticle(r.Context(), article.UpdateInput{
 		AuthorID:  auth.ID,
 		ID:        r.PathValue("id"),
 		Slug:      body.Slug,
@@ -80,9 +81,12 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) error {
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request) error {
 	auth, ok := contextapp.GetAuth(r.Context())
 	if !ok {
-		return ErrUnauthenticated
+		return article.ErrUnauthenticated
 	}
-	err := h.uc.Delete(r.Context(), auth.ID, r.PathValue("id"))
+	err := h.app.DeleteArticle(r.Context(), article.DeleteRequest{
+		AuthorID: &auth.ID,
+		ID:       r.PathValue("id"),
+	})
 	if err != nil {
 		return err
 	}
@@ -93,34 +97,34 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) error {
 func (h *Handler) getBySlug(w http.ResponseWriter, r *http.Request) error {
 	auth, ok := contextapp.GetAuth(r.Context())
 	if !ok {
-		return ErrUnauthenticated
+		return article.ErrUnauthenticated
 	}
 	// ViewerID boleh kosong (pengunjung anonim).
-	a, err := h.uc.GetBySlug(r.Context(), r.PathValue("slug"), auth.ID)
+	a, err := h.app.GetBySlugArticle(r.Context(), auth.ID, r.PathValue("slug"))
 	if err != nil {
 		return err
 	}
-	return json.NewEncoder(w).Encode(transport.Response[ArticleResponse]{Status: transport.StatusSuccess, Data: toResponse(a)})
+	return json.NewEncoder(w).Encode(transport.Response[article.ArticleResponse]{Status: transport.StatusSuccess, Data: a})
 }
 
 // GET /articles?q=&category=&author_id=&tag=go&tag=backend&page=1&page_size=10
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) error {
 	auth, ok := contextapp.GetAuth(r.Context())
 	if !ok {
-		return ErrUnauthenticated
+		return article.ErrUnauthenticated
 	}
 	q := r.URL.Query()
 
-	page, err := intParam(q.Get("page"), "page")
+	page, err := article.IntParam(q.Get("page"), "page")
 	if err != nil {
 		return err
 	}
-	pageSize, err := intParam(q.Get("page_size"), "page_size")
+	pageSize, err := article.IntParam(q.Get("page_size"), "page_size")
 	if err != nil {
 		return err
 	}
 
-	out, err := h.uc.List(r.Context(), ListInput{
+	out, err := h.app.GetListArticle(r.Context(), article.ListInput{
 		ViewerID: auth.ID,
 		AuthorID: q.Get("author_id"),
 		Search:   q.Get("q"),
@@ -129,17 +133,10 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) error {
 		Page:     page,
 		PageSize: pageSize,
 	})
-	if err != nil {
-		return err
-	}
 
-	items := make([]ArticleResponse, 0, len(out.Items))
-	for i := range out.Items {
-		items = append(items, toResponse(&out.Items[i]))
-	}
 	// writeJSON(w, http.StatusOK, listResponse{
 	// 	Data: items,
 	// 	Meta: listMeta{Total: out.Total, Page: out.Page, PageSize: out.PageSize},
 	// })
-	return json.NewEncoder(w).Encode(transport.Response[ListResponse]{Status: transport.StatusSuccess, Data: ListResponse{Data: items, Meta: ListMeta{}}})
+	return json.NewEncoder(w).Encode(transport.Response[article.ListResponse]{Status: transport.StatusSuccess, Data: article.ListResponse{Articles: out.Articles, Meta: out.Meta}})
 }

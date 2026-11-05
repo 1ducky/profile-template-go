@@ -41,6 +41,7 @@ type ArticleUsecaseContract interface {
 	// GetBySlug membaca artikel. Publik hanya melihat yang sudah terbit,
 	// pemilik (ViewerID == AuthorID) juga bisa melihat draft miliknya.
 	GetBySlug(ctx context.Context, slug string, viewerID string) (*ArticleEntity, error)
+	GetByID(ctx context.Context, ID string) (*ArticleEntity, error)
 
 	// List mengembalikan daftar artikel dengan pagination.
 	List(ctx context.Context, in ListInput) (*ListOutput, error)

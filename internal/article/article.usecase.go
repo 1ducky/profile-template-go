@@ -163,6 +163,16 @@ func (uc *usecase) GetBySlug(ctx context.Context, slug string, viewerID string) 
 	return a, nil
 }
 
+// ---------- GetBySlug ----------
+
+func (uc *usecase) GetByID(ctx context.Context, ID string) (*ArticleEntity, error) {
+	a, err := uc.repo.FindByID(ctx, ID)
+	if err != nil {
+		return nil, err
+	}
+	return a, nil
+}
+
 // ---------- List ----------
 
 func (uc *usecase) List(ctx context.Context, in ListInput) (*ListOutput, error) {

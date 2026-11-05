@@ -1,6 +1,6 @@
 package utils
 
-func diff(oldList, newList []string) []string {
+func Diff(oldList, newList []string) []string {
 	newSet := make(map[string]struct{}, len(newList))
 	for _, v := range newList {
 		newSet[v] = struct{}{}

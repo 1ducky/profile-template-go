@@ -58,7 +58,7 @@ func timePtr(t time.Time) *time.Time {
 	return &t
 }
 
-func intParam(raw, name string) (int, error) {
+func IntParam(raw, name string) (int, error) {
 	if raw == "" {
 		return 0, nil // 0 = pakai default di Normalize()
 	}

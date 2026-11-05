@@ -1,8 +1,8 @@
 package article
 
 type ListResponse struct {
-	Data []ArticleResponse `json:"data"`
-	Meta ListMeta          `json:"meta"`
+	Articles []ArticleResponse `json:"articles"`
+	Meta     ListMeta          `json:"meta"`
 }
 
 type ListMeta struct {
@@ -11,7 +11,7 @@ type ListMeta struct {
 	PageSize int   `json:"page_size"`
 }
 
-func toResponse(a *ArticleEntity) ArticleResponse {
+func ToResponse(a *ArticleEntity) ArticleResponse {
 	return ArticleResponse{
 		ID:          a.ID,
 		Slug:        a.Slug,

@@ -1,5 +1,11 @@
 package db
 
+import (
+	"database/sql"
+	"strings"
+	"time"
+)
+
 type LikeString interface {
 	~string
 }
@@ -34,4 +40,31 @@ func MakeSet(rows []Collom) []string {
 		set[i] = string(row) + " = ?"
 	}
 	return set
+}
+
+func NullString(s string) sql.NullString {
+	return sql.NullString{String: s, Valid: s != ""}
+}
+
+func NullTimePtr(t *time.Time) sql.NullTime {
+	if t == nil || t.IsZero() {
+		return sql.NullTime{}
+	}
+	return sql.NullTime{Time: *t, Valid: true}
+}
+
+// escapeLike meng-escape karakter spesial LIKE agar input dicari apa adanya.
+func EscapeLike(s string) string {
+	r := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
+	return r.Replace(s)
+}
+
+// isDuplicateEntry mendeteksi error MySQL 1062 (duplicate key)
+// tanpa menambah dependency ke driver tertentu.
+func IsDuplicateEntry(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "Error 1062") || strings.Contains(msg, "Duplicate entry")
 }

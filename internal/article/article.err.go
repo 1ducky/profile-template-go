@@ -2,6 +2,7 @@ package article
 
 import (
 	"errors"
+	"profile-template/internal/app/err"
 )
 
 var (
@@ -15,10 +16,13 @@ var (
 	ErrBadRequest      = errors.New("article: Bad Request")
 )
 
-// const (
-// 	CodeNotFound err.ErrCode = "ARTICLE_NOT_FOUND"
-// 	CodeInvalidID err.ErrCode = "AUTHOR_IDRE"
-// 	CodeNotFound err.ErrCode = "ARTICLE_NOT_FOUND"
-// 	CodeNotFound err.ErrCode = "ARTICLE_NOT_FOUND"
-// 	CodeNotFound err.ErrCode = "ARTICLE_NOT_FOUND"
-// )
+const (
+	CodeNotFound        err.ErrCode = "ARTICLE_NOT_FOUND"
+	CodeInvalidID       err.ErrCode = "ARTICLE_INVALID_ID"
+	CodeDuplicate       err.ErrCode = "ARTICLE_DUPLICATE"
+	CodeNothingToUpdate err.ErrCode = "ARTICLE_NOTHING_TO_UPDATE"
+	CodeUnauthenticated err.ErrCode = "ARTICLE_UNAUTHENTICATED"
+	CodeForbidden       err.ErrCode = "ARTICLE_FORBIDDEN"
+	CodeInvalidInput    err.ErrCode = "ARTICLE_INVALID_INPUT"
+	CodeBadRequest      err.ErrCode = "ARTICLE_BAD_REQUEST"
+)

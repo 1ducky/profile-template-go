@@ -4,6 +4,7 @@ const (
 	Auth    ErrDomain = "auth"
 	Assets  ErrDomain = "assets"
 	Profile ErrDomain = "profile"
+	Article ErrDomain = "article"
 )
 
 func (e ErrDomain) Error() string {

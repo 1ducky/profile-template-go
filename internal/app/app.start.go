@@ -35,7 +35,7 @@ func StartApp() {
 
 	// Registry
 	log.Print("Creating Err Registry")
-	errs := registry.NewErrRegistry(registry.RegisterErr{AuthKey: errApp.Auth, AssetKey: errApp.Assets, ProfileKey: errApp.Profile})
+	errs := registry.NewErrRegistry(registry.RegisterErr{AuthKey: errApp.Auth, AssetKey: errApp.Assets, ProfileKey: errApp.Profile, ArticleKey: errApp.Article})
 	log.Print("Creating Adapter")
 	adapter := transport.NewAdapter(errs)
 	log.Print("Creating Repo")

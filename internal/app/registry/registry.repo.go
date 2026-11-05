@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"profile-template/internal/article"
 	"profile-template/internal/assets"
 	"profile-template/internal/auth"
 	"profile-template/internal/auth/credential"
@@ -16,6 +17,7 @@ type RegisterRepo struct {
 	Session          auth.SessionRepositoryContract
 	Profile          profile.RepoContract
 	Assets           assets.AssetRepository
+	Article          article.ArticlaeRepositoryContract
 	BucketPersistent assets.RepositoryContract
 }
 
@@ -26,6 +28,7 @@ func NewRegisterRepo(persistent RegisterPersistent, conf config.AppConfig) Regis
 		Session:          session.NewMySQLRepository(persistent.DB),
 		Profile:          profile.NewMySQLRepository(persistent.DB),
 		Assets:           assets.NewMysqlRepo(persistent.DB),
+		Article:          article.NewMySQLRepository(persistent.DB),
 		BucketPersistent: persistent.Bucket,
 	}
 }

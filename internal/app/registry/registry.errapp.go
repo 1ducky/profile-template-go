@@ -2,6 +2,7 @@ package registry
 
 import (
 	"profile-template/internal/app/err"
+	"profile-template/internal/article"
 	"profile-template/internal/assets"
 	"profile-template/internal/auth"
 	"profile-template/internal/profile"
@@ -11,6 +12,7 @@ type RegisterErr struct {
 	AuthKey    err.ErrDomain
 	AssetKey   err.ErrDomain
 	ProfileKey err.ErrDomain
+	ArticleKey err.ErrDomain
 }
 
 func NewErrRegistry(keys RegisterErr) *err.ErrApp {
@@ -51,6 +53,16 @@ func NewErrRegistry(keys RegisterErr) *err.ErrApp {
 		{Err: auth.ErrUnauthorized, Code: auth.CodeUnauthorized, StatusCode: 401, Message: "Unauthorized"},
 		{Err: auth.ErrTokenInvalid, Code: auth.CodeTokenInvalid, StatusCode: 401, Message: "Invalid token"},
 		{Err: auth.ErrTokenExpired, Code: auth.CodeTokenExpired, StatusCode: 401, Message: "Token expired"},
+	})
+	errApp.Register(keys.ArticleKey, []err.ErrEntry{
+		{Err: article.ErrNotFound, Code: article.CodeNotFound, StatusCode: 404, Message: "Article not found"},
+		{Err: article.ErrInvalidID, Code: article.CodeInvalidID, StatusCode: 400, Message: "Article ID is required"},
+		{Err: article.ErrDuplicateSlug, Code: article.CodeDuplicate, StatusCode: 400, Message: "Article slug already exists"},
+		{Err: article.ErrNothingToUpdate, Code: article.CodeNothingToUpdate, StatusCode: 400, Message: "Nothing to update"},
+		{Err: article.ErrUnauthenticated, Code: article.CodeUnauthenticated, StatusCode: 401, Message: "Author ID is required"},
+		{Err: article.ErrForbidden, Code: article.CodeForbidden, StatusCode: 403, Message: "Not the owner of this article"},
+		{Err: article.ErrInvalidInput, Code: article.CodeInvalidInput, StatusCode: 400, Message: "Invalid input"},
+		{Err: article.ErrBadRequest, Code: article.CodeBadRequest, StatusCode: 400, Message: "Bad Request"},
 	})
 	return errApp
 }

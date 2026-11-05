@@ -163,6 +163,26 @@ func (u *Usecase) LinkingAsset(ctx context.Context, assetIDs []string, parentID 
 	}
 	return nil
 }
+func (u *Usecase) LinkingAssetByFileKeys(ctx context.Context, fileKeys []string, parentID string) error {
+	md, err := u.AssetRepo.GetByFileKeys(ctx, fileKeys)
+	if err != nil {
+		return err
+	}
+	validIds := utils.MapField(md, func(amd AssetMetaData) (string, bool) {
+		if amd.Status == AssetStatusDeleted || amd.ParentID != "" {
+			return "", false
+		}
+		return amd.ID, true
+	})
+	if len(validIds) == 0 {
+		return ErrAssetNotFound
+	}
+	err = u.AssetRepo.LinkingAsset(ctx, validIds, parentID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func (u *Usecase) ReadByParentID(ctx context.Context, parentIDs []string) ([]AssetMetaData, error) {
 	data, err := u.AssetRepo.ReadByParentID(ctx, parentIDs)

@@ -27,12 +27,18 @@ func (r *Repo) Update(ctx context.Context, payload UpdatePayload) error {
 func (r *Repo) GetByIDs(ctx context.Context, id []string) ([]AssetMetaData, error) {
 	return []AssetMetaData{}, nil
 }
+func (r *Repo) GetByFileKeys(ctx context.Context, fileKeys []string) ([]AssetMetaData, error) {
+	return []AssetMetaData{}, nil
+}
 
 func (r *Repo) ReadByParentID(ctx context.Context, parentID []string) ([]AssetMetaData, error) {
 	return []AssetMetaData{}, nil
 }
 
 func (r *Repo) LinkingAsset(ctx context.Context, assetID []string, parentID string) error {
+	return nil
+}
+func (r *Repo) LinkingAssetByFileKeys(ctx context.Context, fileKeys []string, parentID string) error {
 	return nil
 }
 

@@ -79,6 +79,20 @@ func (f *FakeRepo) GetByIDs(ctx context.Context, ids []string) ([]AssetMetaData,
 	}
 	return result, nil
 }
+func (f *FakeRepo) GetByFileKeys(ctx context.Context, fileKeys []string) ([]AssetMetaData, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	var result []AssetMetaData
+	for _, fileKey := range fileKeys {
+		for _, asset := range f.assets {
+			if asset.FileKey == fileKey {
+				result = append(result, asset)
+			}
+		}
+	}
+	return result, nil
+}
+
 func (f *FakeRepo) ReadByParentID(ctx context.Context, parentIDs []string) ([]AssetMetaData, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
@@ -104,6 +118,24 @@ func (f *FakeRepo) LinkingAsset(ctx context.Context, assetIDs []string, parentID
 			asset.UpdatedAt = time.Now()
 			f.assets[id] = asset
 
+		}
+	}
+	return nil
+}
+
+func (f *FakeRepo) LinkingAssetByFileKeys(ctx context.Context, fileKeys []string, parentID string) error {
+	if parentID == "" {
+		return ErrAssetNotFound
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	for _, fileKey := range fileKeys {
+		for _, asset := range f.assets {
+			if asset.FileKey == fileKey {
+				asset.ParentID = parentID
+				asset.UpdatedAt = time.Now()
+				f.assets[asset.ID] = asset
+			}
 		}
 	}
 	return nil

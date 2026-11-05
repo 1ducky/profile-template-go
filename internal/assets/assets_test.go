@@ -460,3 +460,66 @@ func TestReleaseByFileKeys(t *testing.T) {
 	})
 
 }
+func TestReleaseByFileKeysAndLinkingByFileKeys(t *testing.T) {
+	assetsUC := NewUC(t)
+	var validFileKeys string
+	var validAssets string
+	uc := UploadTestPayload{
+		Name:        "VALID_CATEGORY_UPLOAD_TEST1",
+		ExpectedErr: nil,
+		Usecase:     Upload,
+		Policy: assets.UploadPolicy{
+			Category: assets.CategoryDocument,
+			MaxSize:  1024 * 1024 * 10,
+			UserID:   "VALID_CATEGORY_UPLOAD_TEST",
+		},
+		Reader: bytes.NewBuffer(TestBuffer[MimeDocPDF]),
+	}
+	parentID := "asdasdwasd"
+
+	t.Run("UPLOAD_VALID_ASSETS", func(t *testing.T) {
+		res, err := assetsUC.Upload(t.Context(), uc.Reader, uc.Policy)
+		if err != nil {
+			t.Fatal("Should Be Success")
+		}
+		validFileKeys = res.FileKey
+		validAssets = res.ID
+		log.Print("UPLOAD_VALID_ASSETS", res)
+	})
+
+	t.Run("LINKING_ASSET_BY_FILE_KEY", func(t *testing.T) {
+		err := assetsUC.LinkingAssetByFileKeys(t.Context(), []string{validFileKeys}, parentID)
+		if err != nil {
+			log.Print("LINKING_ASSET_BY_FILE_KEY", err)
+			t.Fatal("Should Be Success")
+		}
+	})
+	t.Run("EMPTY_FILE_KEY_RELEASE", func(t *testing.T) {
+		err := assetsUC.ReleaseByFileKeys(t.Context(), []string{""})
+		if err == nil {
+			t.Fatal("Should Be Error")
+		}
+	})
+	t.Run("VALID_FILE_KEY_RELEASE", func(t *testing.T) {
+		err := assetsUC.ReleaseByFileKeys(t.Context(), []string{validFileKeys})
+		if err != nil {
+			log.Print(err)
+			t.Fatal("Should Be Success")
+		}
+	})
+	t.Run("DUP_FILE_KEY_RELEASE", func(t *testing.T) {
+		err := assetsUC.ReleaseByFileKeys(t.Context(), []string{validFileKeys})
+		if err == nil {
+			t.Fatal("Should Be Error")
+		}
+	})
+
+	t.Run("CLEANING_TEMP", func(t *testing.T) {
+		err := assetsUC.Delete(t.Context(), assets.DeletePayload{IDs: []string{validAssets}})
+		if err != nil {
+			log.Print(err)
+			t.Fatal("Should Be Error")
+		}
+	})
+
+}

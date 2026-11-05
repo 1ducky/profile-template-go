@@ -43,7 +43,7 @@ func StartApp() {
 	log.Print("Creating UC")
 	repos := registry.NewRegisterRepo(persistent, cfg)
 	log.Print("Creating UC")
-	ucs := registry.NewRegisterUC(repos, cfg)
+	ucs := registry.NewRegisterUC(repos, cfg) //
 	log.Print("Creating UoW")
 	uows := registry.NewUoWCase(db, cfg)
 	log.Print("Creating App")

@@ -99,6 +99,38 @@ func (r *MysqlRepo) GetByIDs(ctx context.Context, ids []string) ([]AssetMetaData
 	}
 	return assets, nil
 }
+func (r *MysqlRepo) GetByFileKeys(ctx context.Context, fileKeys []string) ([]AssetMetaData, error) {
+	if len(fileKeys) == 0 {
+		return []AssetMetaData{}, ErrAssetNotFound
+	}
+	collom := db.MakeColm(ID, FILENAME, FILE_KEY, MIME, AUTHOR_ID, CATEGORY, STATUS, PARENT_ID, SIZE, CREATED_AT, UPDATED_AT)
+	ph := db.MakePlaceHolder(len(fileKeys))
+	query := `SELECT ` + strings.Join(collom, ",") + ` FROM ` + string(TABLE) + ` WHERE ` + string(FILE_KEY) + ` IN (` + strings.Join(ph, ",") + `)`
+	rows, err := r.DB.QueryContext(ctx, query, db.ToArgs(fileKeys)...)
+	if err != nil {
+		return []AssetMetaData{}, err
+	}
+	defer rows.Close()
+	var assets []AssetMetaData
+	for rows.Next() {
+		var nullParentID sql.NullString
+		var asset AssetMetaData
+		if err := rows.Scan(&asset.ID, &asset.Filename, &asset.FileKey, &asset.Mime, &asset.AuthorID, &asset.Category, &asset.Status, &nullParentID, &asset.Size, &asset.CreatedAt, &asset.UpdatedAt); err != nil {
+			return []AssetMetaData{}, err
+		}
+		if nullParentID.Valid {
+			asset.ParentID = nullParentID.String
+		}
+		assets = append(assets, asset)
+	}
+	if err := rows.Err(); err != nil {
+		return []AssetMetaData{}, err
+	}
+	if len(assets) == 0 {
+		return []AssetMetaData{}, ErrAssetNotFound
+	}
+	return assets, nil
+}
 
 func (r *MysqlRepo) ReadByParentID(ctx context.Context, parentIDs []string) ([]AssetMetaData, error) {
 	if len(parentIDs) == 0 {
@@ -150,6 +182,27 @@ func (r *MysqlRepo) LinkingAsset(ctx context.Context, assetIDs []string, parentI
 		return ErrAssetNotFound
 	}
 	if rowsAffected < int64(len(assetIDs)) {
+		return nil
+	}
+	return nil
+}
+func (r *MysqlRepo) LinkingAssetByFileKeys(ctx context.Context, fileKeys []string, parentID string) error {
+	if parentID == "" || len(fileKeys) == 0 {
+		return ErrAssetNotFound
+	}
+	inPH := db.MakePlaceHolder(len(fileKeys))
+	query := `UPDATE ` + string(TABLE) + ` SET ` + string(PARENT_ID) + ` = ? WHERE ` + string(FILE_KEY) + ` IN (` + strings.Join(inPH, ",") + `) AND ` + string(PARENT_ID) + ` IS NULL`
+	args := []any{parentID}
+	args = append(args, db.ToArgs(fileKeys)...)
+	res, err := r.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil || rowsAffected < 1 {
+		return ErrAssetNotFound
+	}
+	if rowsAffected < int64(len(fileKeys)) {
 		return nil
 	}
 	return nil

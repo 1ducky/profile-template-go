@@ -8,6 +8,7 @@ import (
 	"profile-template/internal/app/uow"
 	"profile-template/internal/article"
 	"profile-template/internal/assets"
+	"profile-template/internal/profile"
 	"profile-template/internal/utils"
 	"strings"
 	"time"
@@ -19,17 +20,18 @@ type TXUsecase struct {
 }
 
 type ArticleApp struct {
-	uow  uow.UnitOfWork[TXUsecase]
-	artc article.ArticleUsecaseContract
+	uow     uow.UnitOfWork[TXUsecase]
+	artc    article.ArticleUsecaseContract
+	profile profile.UsecaseContract
 }
 
-func NewArticleApp(artc article.ArticleUsecaseContract, uow uow.UnitOfWork[TXUsecase]) *ArticleApp {
-	return &ArticleApp{artc: artc, uow: uow}
+func NewArticleApp(artc article.ArticleUsecaseContract, profle profile.UsecaseContract, uow uow.UnitOfWork[TXUsecase]) *ArticleApp {
+	return &ArticleApp{artc: artc, profile: profle, uow: uow}
 }
 
-func (a *ArticleApp) CreateArticle(ctx context.Context, req article.CreateInput) (article.ArticleEntity, error) {
+func (a *ArticleApp) CreateArticle(ctx context.Context, req article.CreateInput) (ArticleResponse, error) {
 	if req.AuthorID == "" {
-		return article.ArticleEntity{}, article.ErrUnauthenticated
+		return ArticleResponse{}, article.ErrUnauthenticated
 	}
 	filekeys := article.ExtractFileKeys(req.Content)
 	filekeys = append(filekeys, req.Cover)
@@ -59,14 +61,34 @@ func (a *ArticleApp) CreateArticle(ctx context.Context, req article.CreateInput)
 			return err
 		}
 		articleRes = *res
+		if len(filekeys) == 0 {
+			return nil
+		}
 		err = r.Asset.LinkingAssetByFileKeys(ctx, filekeys, res.ID)
 		if err != nil {
 			return err
 		}
 		return nil
 	})
+	if err != nil {
+		return ArticleResponse{}, err
+	}
+	author, err := a.profile.GetUserByID(ctx, articleRes.AuthorID)
+	if err != nil {
+		log.Println("error get author:", err)
+		log.Println("error get author:", articleRes.AuthorID)
+		return ArticleResponse{}, err
+	}
 
-	return articleRes, err
+	return ArticleResponse{
+		ArticleResponse: article.ToResponse(&articleRes),
+		ProfileResource: ProfileResource{
+			Username: author.Username,
+			Tag:      author.Tag,
+			Avatar:   author.AvatarURL,
+			Bio:      author.Bio,
+		},
+	}, err
 
 }
 
@@ -94,8 +116,11 @@ func (a *ArticleApp) UpdateArticle(ctx context.Context, req article.UpdateInput)
 			return err
 		}
 		err = r.Asset.ReleaseByParentID(ctx, []string{lastArticle.ID})
-		if err != nil {
+		if err != nil && len(newFileKeys) > 0 {
 			return err
+		}
+		if len(newFileKeys) == 0 {
+			return nil
 		}
 		err = r.Asset.LinkingAssetByFileKeys(ctx, newFileKeys, lastArticle.ID)
 		if err != nil {
@@ -123,20 +148,34 @@ func (a *ArticleApp) DeleteArticle(ctx context.Context, req article.DeleteReques
 	})
 }
 
-func (a *ArticleApp) GetBySlugArticle(ctx context.Context, userID string, slug string) (article.ArticleResponse, error) {
+func (a *ArticleApp) GetBySlugArticle(ctx context.Context, userID string, slug string) (ArticleResponse, error) {
 	log.Println("app:", slug)
 	res, err := a.artc.GetBySlug(ctx, slug, userID)
 	if err != nil {
-		return article.ArticleResponse{}, err
+		return ArticleResponse{}, err
 	}
-	return article.ToResponse(res), nil
+	author, err := a.profile.GetUserByID(ctx, res.AuthorID)
+	if err != nil {
+		log.Println("error get author:", err)
+		return ArticleResponse{}, err
+	}
+
+	return ArticleResponse{
+		ArticleResponse: article.ToResponse(res),
+		ProfileResource: ProfileResource{
+			Username: author.Username,
+			Tag:      author.Tag,
+			Avatar:   author.AvatarURL,
+			Bio:      author.Bio,
+		},
+	}, err
 }
 
-func (a *ArticleApp) GetListArticle(ctx context.Context, req article.ListInput) (article.ListResponse, error) {
+func (a *ArticleApp) GetListArticle(ctx context.Context, req article.ListInput) (ListArticleResponses, error) {
 	res, err := a.artc.List(ctx, req)
 	if err == article.ErrNotFound {
-		return article.ListResponse{
-			Articles: []article.ArticleResponse{},
+		return ListArticleResponses{
+			Articles: []ArticleResponse{},
 			Meta: article.ListMeta{
 				Total:    0,
 				Page:     req.Page,
@@ -144,19 +183,44 @@ func (a *ArticleApp) GetListArticle(ctx context.Context, req article.ListInput) 
 			},
 		}, err
 	} else if err != nil {
-		return article.ListResponse{}, err
+		return ListArticleResponses{}, err
 	}
-	responses := make([]article.ArticleResponse, len(res.Items))
-	for i, item := range res.Items {
-		responses[i] = article.ToResponse(&item)
+	responses := ListArticleResponses{
+		Articles: make([]ArticleResponse, len(res.Items)),
 	}
+
+	authorIDs := make([]string, len(res.Items))
+	for i := range res.Items {
+		responses.Articles[i].ArticleResponse = article.ToResponse(&res.Items[i])
+		authorIDs[i] = res.Items[i].AuthorID
+	}
+	authorIDs = utils.Unique(authorIDs)
+	authors, err := a.profile.GetUsersByIDs(ctx, authorIDs)
+	if err != nil {
+		return ListArticleResponses{}, err
+	}
+	authorMap := make(map[string]ProfileResource)
+	for _, author := range authors {
+		authorMap[author.ID] = ProfileResource{
+			Username: author.Username,
+			Tag:      author.Tag,
+			Avatar:   author.AvatarURL,
+			Bio:      author.Bio,
+		}
+	}
+	for i, item := range responses.Articles {
+		if author, ok := authorMap[item.ArticleResponse.AuthorID]; ok {
+			responses.Articles[i].ProfileResource = author
+		}
+	}
+
 	Metadata := article.ListMeta{
 		Total:    res.Total,
 		Page:     res.Page,
 		PageSize: res.PageSize,
 	}
-	return article.ListResponse{
-		Articles: responses,
+	return ListArticleResponses{
+		Articles: responses.Articles,
 		Meta:     Metadata,
 	}, nil
 }

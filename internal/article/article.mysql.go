@@ -104,7 +104,7 @@ func (r *mysqlRepository) Update(ctx context.Context, req UpdateRequest) error {
 	if req.Cover != nil {
 		add("cover", db.NullString(*req.Cover))
 	}
-	if req.Content != nil && req.URL != nil {
+	if req.Content != nil {
 		add("content", *req.Content)
 	}
 	if req.PublishAt != nil {
@@ -147,6 +147,9 @@ func (r *mysqlRepository) Update(ctx context.Context, req UpdateRequest) error {
 			return ErrNotFound
 		}
 	}
+	// fmt.Println("QUERY:", q)
+	// fmt.Println("ARGS:", args)
+	// fmt.Println("AFFECTED:", affected)
 	return nil
 }
 

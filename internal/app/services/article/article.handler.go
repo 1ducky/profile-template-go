@@ -39,12 +39,13 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) error {
 		Cover:     body.Cover,
 		Content:   body.Content,
 		PublishAt: body.PublishedAt,
+		URL:       body.URL,
 	})
 	if err != nil {
 		return err
 	}
 
-	return json.NewEncoder(w).Encode(transport.Response[article.ArticleEntity]{Status: transport.StatusSuccess, Data: a})
+	return json.NewEncoder(w).Encode(transport.Response[ArticleResponse]{Status: transport.StatusSuccess, Data: a})
 }
 
 // PATCH /articles/{id}
@@ -74,7 +75,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	return nil
+	return json.NewEncoder(w).Encode(transport.Response[map[string]string]{Status: transport.StatusSuccess, Data: map[string]string{"message": "article updated successfully"}})
 }
 
 // DELETE /articles/{id}
@@ -90,7 +91,7 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	return nil
+	return json.NewEncoder(w).Encode(transport.Response[map[string]string]{Status: transport.StatusSuccess, Data: map[string]string{"message": "article deleted successfully"}})
 }
 
 // GET /articles/{slug}
@@ -105,7 +106,7 @@ func (h *Handler) GetBySlug(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	return json.NewEncoder(w).Encode(transport.Response[article.ArticleResponse]{Status: transport.StatusSuccess, Data: a})
+	return json.NewEncoder(w).Encode(transport.Response[ArticleResponse]{Status: transport.StatusSuccess, Data: a})
 }
 
 // GET /articles?q=&category=&author_id=&tag=go&tag=backend&page=1&page_size=10
@@ -139,5 +140,5 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) error {
 	// 	Data: items,
 	// 	Meta: listMeta{Total: out.Total, Page: out.Page, PageSize: out.PageSize},
 	// })
-	return json.NewEncoder(w).Encode(transport.Response[article.ListResponse]{Status: transport.StatusSuccess, Data: article.ListResponse{Articles: out.Articles, Meta: out.Meta}})
+	return json.NewEncoder(w).Encode(transport.Response[ListArticleResponses]{Status: transport.StatusSuccess, Data: out})
 }

@@ -2,6 +2,7 @@ package article
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -23,14 +24,13 @@ func (uc *usecase) Create(ctx context.Context, in CreateInput) (*ArticleEntity, 
 	if in.AuthorID == "" {
 		return nil, ErrUnauthenticated
 	}
-
 	title := strings.TrimSpace(in.Title)
 	if title == "" {
 		return nil, ErrBadRequest
 	}
 	slug := slugify(in.Title)
 
-	if strings.TrimSpace(in.Content) == "" && in.URL != "" {
+	if strings.TrimSpace(in.Content) == "" && in.URL == "" {
 		return nil, ErrBadRequest
 	}
 	if strings.TrimSpace(in.Category) == "" {
@@ -68,15 +68,14 @@ func (uc *usecase) Update(ctx context.Context, in UpdateInput) error {
 	if in.AuthorID == "" {
 		return ErrUnauthenticated
 	}
+	fmt.Println("usecase:")
+	fmt.Println("url:", *in.URL)
+	fmt.Println("content:", *in.Content)
+
 	if in.ID == "" {
 		return ErrInvalidID
 	}
 	slug := slugify(*in.Title)
-
-	// cur, err := uc.loadOwned(ctx, in.ID, in.AuthorID)
-	// if err != nil {
-	// 	return err
-	// }
 
 	req := UpdateRequest{
 		ID:        in.ID,
@@ -88,6 +87,8 @@ func (uc *usecase) Update(ctx context.Context, in UpdateInput) error {
 		Tags:      in.Tags,
 		PublishAt: in.PublishAt,
 		UpdateAt:  time.Now(),
+		Category:  in.Category,
+		AuthorID:  &in.AuthorID,
 	}
 
 	if in.Title != nil {
@@ -98,38 +99,37 @@ func (uc *usecase) Update(ctx context.Context, in UpdateInput) error {
 		req.Title = &t
 	}
 	if in.Category != nil {
-		c := strings.TrimSpace(*in.Category)
-		if c == "" {
+		if strings.TrimSpace(*in.Category) == "" {
 			return ErrBadRequest
 		}
-		req.Category = &c
+		req.Category = in.Category
 	}
-	if in.Content != nil && in.URL != nil {
-		if strings.TrimSpace(*in.Content) == "" {
+	if in.Content != nil {
+		if strings.TrimSpace(*in.Content) == "" && in.URL == nil {
 			return ErrBadRequest
 		}
 		req.Content = in.Content
 	}
 
-	if in.Slug != nil {
-		// s := slugify(*in.Slug)
-		// if s == "" {
-		// 	return invalid("slug cannot be empty")
-		// }
-		if slug != "" {
-			taken, err := uc.repo.ExistsBySlug(ctx, slug, in.ID)
-			if err != nil {
-				return err
-			}
-			if taken {
-				return ErrDuplicateSlug
-			}
-			// u := articleURL(s)
-			// req.Slug = &s
-			// req.URL = &u // URL harus ikut berubah saat slug berubah
-		}
-	}
-
+	// if in.Slug != nil {
+	// 	// s := slugify(*in.Slug)
+	// 	// if s == "" {
+	// 	// 	return invalid("slug cannot be empty")
+	// 	// }
+	// 	if slug != "" {
+	// 		taken, err := uc.repo.ExistsBySlug(ctx, slug, in.ID)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 		if taken {
+	// 			return ErrDuplicateSlug
+	// 		}
+	// 		// u := articleURL(s)
+	// 		// req.Slug = &s
+	// 		// req.URL = &u // URL harus ikut berubah saat slug berubah
+	// 	}
+	// }
+	fmt.Println("usecase req:", *req.URL)
 	return uc.repo.Update(ctx, req)
 }
 

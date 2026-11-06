@@ -3,6 +3,7 @@ package profile
 import (
 	"context"
 	"profile-template/internal/db/mapper"
+	"profile-template/internal/utils"
 )
 
 type Usecase struct {
@@ -42,6 +43,18 @@ func (uc *Usecase) GetUserByID(ctx context.Context, id string) (Profile, error) 
 			return Profile{}, ErrNotFound
 		}
 		return Profile{}, translate
+	}
+	return res, nil
+}
+func (uc *Usecase) GetUsersByIDs(ctx context.Context, ids []string) ([]Profile, error) {
+	uniqueIDs := utils.Unique(ids)
+	res, err := uc.repo.GetUsersByIDs(ctx, uniqueIDs)
+	if err != nil {
+		translate := mapper.MapMySQLError(err)
+		if translate.Error() == mapper.ErrNoRows.Error() {
+			return []Profile{}, ErrNotFound
+		}
+		return []Profile{}, translate
 	}
 	return res, nil
 }

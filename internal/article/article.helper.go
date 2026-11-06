@@ -2,6 +2,7 @@ package article
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -69,7 +70,7 @@ func IntParam(raw, name string) (int, error) {
 	return n, nil
 }
 
-var filekeyRe = regexp.MustCompile(`\[([/\\]filekey[/\\][^\]]+)\]`)
+var filekeyRe = regexp.MustCompile(`assets:([^\s)]+)`)
 
 func ExtractFileKeys(content string) []string {
 	// Cocokkan [/filekey/<nama>.png] dan ambil bagian di dalam kurung siku
@@ -79,6 +80,8 @@ func ExtractFileKeys(content string) []string {
 	result := make([]string, 0, len(matches))
 	for _, m := range matches {
 		result = append(result, m[1]) // m[1] = isi capture group
+		log.Print("ExtractFileKeys: ", m)
 	}
+	log.Print("ExtractFileKeys: ", result)
 	return result
 }

@@ -2,6 +2,7 @@ package article
 
 import (
 	"context"
+	"log"
 	"strings"
 	"time"
 
@@ -151,6 +152,9 @@ func (uc *usecase) Delete(ctx context.Context, authorID string, id string) error
 
 func (uc *usecase) GetBySlug(ctx context.Context, slug string, viewerID string) (*ArticleEntity, error) {
 	a, err := uc.repo.FindBySlug(ctx, slug)
+	log.Println("Article:", a)
+	log.Println("Article:", err)
+	log.Println("Article:", slug)
 	if err != nil {
 		return nil, err
 	}

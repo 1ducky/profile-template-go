@@ -54,7 +54,6 @@ type ListOutput struct {
 // ===================== Request body (JSON) =====================
 
 type CreateArticleBody struct {
-	Slug        string     `json:"slug"`
 	Title       string     `json:"title"`
 	Excerpt     string     `json:"excerpt"`
 	Category    string     `json:"category"`
@@ -62,20 +61,20 @@ type CreateArticleBody struct {
 	Tags        []string   `json:"tags"`
 	Cover       string     `json:"cover"`
 	Content     string     `json:"content"`
+	URL         string     `json:"url"`
 	PublishedAt *time.Time `json:"published_at"` // RFC3339, null/absen = draft
 }
 
 // updateArticleBody memakai pointer: field yang tidak dikirim = tidak diubah.
 type UpdateArticleBody struct {
-	Slug        *string    `json:"slug"`
-	Title       *string    `json:"title"`
-	Excerpt     *string    `json:"excerpt"`
-	Category    *string    `json:"category"`
-	Badges      *[]string  `json:"badges"`
-	Tags        *[]string  `json:"tags"`
-	Cover       *string    `json:"cover"`
-	Content     *string    `json:"content"`
-	PublishedAt *time.Time `json:"published_at"`
+	Title    *string   `json:"title"`
+	URL      *string   `json:"url"`
+	Excerpt  *string   `json:"excerpt"`
+	Category *string   `json:"category"`
+	Badges   *[]string `json:"badges"`
+	Tags     *[]string `json:"tags"`
+	Cover    *string   `json:"cover"`
+	Content  *string   `json:"content"`
 }
 
 // ===================== Response (JSON) =====================

@@ -2,6 +2,7 @@ package article
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"profile-template/internal/article"
 	"profile-template/internal/contextapp"
@@ -13,12 +14,12 @@ type Handler struct {
 	app ArticleApp
 }
 
-func NewHandler(app ArticleApp) *Handler {
-	return &Handler{app: app}
+func NewHandler(app ArticleApp) Handler {
+	return Handler{app: app}
 }
 
 // POST /articles
-func (h *Handler) create(w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) Create(w http.ResponseWriter, r *http.Request) error {
 	auth, ok := contextapp.GetAuth(r.Context())
 	if !ok {
 		return article.ErrUnauthenticated
@@ -47,7 +48,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) error {
 }
 
 // PATCH /articles/{id}
-func (h *Handler) update(w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) error {
 	auth, ok := contextapp.GetAuth(r.Context())
 	if !ok {
 		return article.ErrUnauthenticated
@@ -58,17 +59,16 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	err := h.app.UpdateArticle(r.Context(), article.UpdateInput{
-		AuthorID:  auth.ID,
-		ID:        r.PathValue("id"),
-		Slug:      body.Slug,
-		Title:     body.Title,
-		Excerpt:   body.Excerpt,
-		Category:  body.Category,
-		Badges:    body.Badges,
-		Tags:      body.Tags,
-		Cover:     body.Cover,
-		Content:   body.Content,
-		PublishAt: body.PublishedAt,
+		AuthorID: auth.ID,
+		ID:       r.PathValue("id"),
+		Title:    body.Title,
+		Excerpt:  body.Excerpt,
+		Category: body.Category,
+		Badges:   body.Badges,
+		Tags:     body.Tags,
+		Cover:    body.Cover,
+		Content:  body.Content,
+		URL:      body.URL,
 	})
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) error {
 }
 
 // DELETE /articles/{id}
-func (h *Handler) delete(w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) error {
 	auth, ok := contextapp.GetAuth(r.Context())
 	if !ok {
 		return article.ErrUnauthenticated
@@ -94,12 +94,13 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) error {
 }
 
 // GET /articles/{slug}
-func (h *Handler) getBySlug(w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) GetBySlug(w http.ResponseWriter, r *http.Request) error {
 	auth, ok := contextapp.GetAuth(r.Context())
 	if !ok {
 		return article.ErrUnauthenticated
 	}
 	// ViewerID boleh kosong (pengunjung anonim).
+	log.Println("Handler:", r.PathValue("slug"))
 	a, err := h.app.GetBySlugArticle(r.Context(), auth.ID, r.PathValue("slug"))
 	if err != nil {
 		return err
@@ -108,7 +109,7 @@ func (h *Handler) getBySlug(w http.ResponseWriter, r *http.Request) error {
 }
 
 // GET /articles?q=&category=&author_id=&tag=go&tag=backend&page=1&page_size=10
-func (h *Handler) list(w http.ResponseWriter, r *http.Request) error {
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) error {
 	auth, ok := contextapp.GetAuth(r.Context())
 	if !ok {
 		return article.ErrUnauthenticated

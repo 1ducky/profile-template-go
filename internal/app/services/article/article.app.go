@@ -2,11 +2,14 @@ package article
 
 import (
 	"context"
+	"log"
 	"path/filepath"
+	assetsApp "profile-template/internal/app/services/assets"
 	"profile-template/internal/app/uow"
 	"profile-template/internal/article"
 	"profile-template/internal/assets"
 	"profile-template/internal/utils"
+	"strings"
 	"time"
 )
 
@@ -35,7 +38,7 @@ func (a *ArticleApp) CreateArticle(ctx context.Context, req article.CreateInput)
 		if key == "" {
 			return "", false
 		}
-		return filepath.FromSlash(key), true
+		return a.clearToValidFileKey(key), true
 	})
 	var articleRes article.ArticleEntity
 	err := a.uow.Do(ctx, func(ctx context.Context, r TXUsecase) error {
@@ -77,8 +80,9 @@ func (a *ArticleApp) UpdateArticle(ctx context.Context, req article.UpdateInput)
 		if key == "" {
 			return "", false
 		}
-		return filepath.FromSlash(key), true
+		return a.clearToValidFileKey(key), true
 	})
+	log.Print(newFileKeys)
 	return a.uow.Do(ctx, func(ctx context.Context, r TXUsecase) error {
 		lastArticle, err := r.Article.GetByID(ctx, req.ID)
 		if err != nil {
@@ -109,7 +113,7 @@ func (a *ArticleApp) DeleteArticle(ctx context.Context, req article.DeleteReques
 	return a.uow.Do(ctx, func(ctx context.Context, r TXUsecase) error {
 		err := r.Article.Delete(ctx, *req.AuthorID, req.ID)
 		if err != nil {
-			return article.ErrNotFound
+			return err
 		}
 		err = r.Asset.ReleaseByParentID(ctx, []string{req.ID})
 		if err != nil {
@@ -120,7 +124,8 @@ func (a *ArticleApp) DeleteArticle(ctx context.Context, req article.DeleteReques
 }
 
 func (a *ArticleApp) GetBySlugArticle(ctx context.Context, userID string, slug string) (article.ArticleResponse, error) {
-	res, err := a.artc.GetBySlug(ctx, userID, slug)
+	log.Println("app:", slug)
+	res, err := a.artc.GetBySlug(ctx, slug, userID)
 	if err != nil {
 		return article.ArticleResponse{}, err
 	}
@@ -129,7 +134,16 @@ func (a *ArticleApp) GetBySlugArticle(ctx context.Context, userID string, slug s
 
 func (a *ArticleApp) GetListArticle(ctx context.Context, req article.ListInput) (article.ListResponse, error) {
 	res, err := a.artc.List(ctx, req)
-	if err != nil {
+	if err == article.ErrNotFound {
+		return article.ListResponse{
+			Articles: []article.ArticleResponse{},
+			Meta: article.ListMeta{
+				Total:    0,
+				Page:     req.Page,
+				PageSize: req.PageSize,
+			},
+		}, err
+	} else if err != nil {
 		return article.ListResponse{}, err
 	}
 	responses := make([]article.ArticleResponse, len(res.Items))
@@ -145,4 +159,8 @@ func (a *ArticleApp) GetListArticle(ctx context.Context, req article.ListInput) 
 		Articles: responses,
 		Meta:     Metadata,
 	}, nil
+}
+
+func (a *ArticleApp) clearToValidFileKey(filekey string) string {
+	return filepath.FromSlash(strings.TrimPrefix(filekey, assetsApp.PREFIX))
 }

@@ -157,7 +157,7 @@ func (r *mysqlRepository) Delete(ctx context.Context, req DeleteRequest) error {
 		return ErrInvalidID
 	}
 
-	res, err := r.db.ExecContext(ctx, "DELETE FROM "+tableName+" WHERE id = ? AND author_id", req.ID, req.AuthorID)
+	res, err := r.db.ExecContext(ctx, "DELETE FROM "+tableName+" WHERE id = ? AND author_id = ?", req.ID, req.AuthorID)
 	if err != nil {
 		return fmt.Errorf("article: delete: %w", err)
 	}

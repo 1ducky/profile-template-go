@@ -28,6 +28,6 @@ func (a *AssetApp) UploadPublicAssets(ctx context.Context, req UploadPublicAsset
 		return AssetsUploadRes{}, auth.ErrUnauthorized
 	}
 	res, err := a.assets.Upload(ctx, req.Reader, assets.UploadPolicy{Category: assets.CategoryPost, MaxSize: 2 * assets.MB, UserID: req.UserID})
-	res.FileKey = filepath.ToSlash(res.FileKey)
+	res.FileKey = PREFIX + filepath.ToSlash(res.FileKey)
 	return AssetsUploadRes{FileKey: res.FileKey, Metadata: res}, err
 }

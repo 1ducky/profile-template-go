@@ -109,6 +109,20 @@ func (h *Handler) GetBySlug(w http.ResponseWriter, r *http.Request) error {
 	return json.NewEncoder(w).Encode(transport.Response[ArticleResponse]{Status: transport.StatusSuccess, Data: a})
 }
 
+// GET /article/{id}
+func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) error {
+	auth, ok := contextapp.GetAuth(r.Context())
+	if !ok {
+		return article.ErrUnauthenticated
+	}
+	// ViewerID boleh kosong (pengunjung anonim).
+	a, err := h.app.GetByIdArticle(r.Context(), auth.ID, r.PathValue("id"))
+	if err != nil {
+		return err
+	}
+	return json.NewEncoder(w).Encode(transport.Response[ArticleResponse]{Status: transport.StatusSuccess, Data: a})
+}
+
 // GET /articles?q=&category=&author_id=&tag=go&tag=backend&page=1&page_size=10
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) error {
 	auth, ok := contextapp.GetAuth(r.Context())

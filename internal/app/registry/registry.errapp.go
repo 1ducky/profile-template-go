@@ -6,6 +6,7 @@ import (
 	"profile-template/internal/assets"
 	"profile-template/internal/auth"
 	"profile-template/internal/profile"
+	"slices"
 )
 
 type RegisterErr struct {
@@ -18,7 +19,7 @@ type RegisterErr struct {
 func NewErrRegistry(keys RegisterErr) *err.ErrApp {
 	errApp := err.NewErrApp()
 	// Auth
-	errApp.Register(keys.AuthKey, []err.ErrEntry{
+	authErr := []err.ErrEntry{
 		{Err: auth.ErrUserNotFound, Code: auth.CodeUserNotFound, StatusCode: 404, Message: "User not found"},
 		{Err: auth.ErrInvalidCredentials, Code: auth.CodeInvalidCredentials, StatusCode: 401, Message: "Invalid credentials"},
 		{Err: auth.ErrPasswordShort, Code: auth.CodePasswordShort, StatusCode: 400, Message: "Password is too short"},
@@ -28,8 +29,10 @@ func NewErrRegistry(keys RegisterErr) *err.ErrApp {
 		{Err: auth.ErrTokenInvalid, Code: auth.CodeTokenInvalid, StatusCode: 401, Message: "Invalid token"},
 		{Err: auth.ErrTokenExpired, Code: auth.CodeTokenExpired, StatusCode: 401, Message: "Token expired"},
 		{Err: auth.ErrRoleInvalid, Code: auth.CodeRoleInvalid, StatusCode: 403, Message: "Invalid role"},
-	})
-	errApp.Register(keys.AssetKey, []err.ErrEntry{
+	}
+	errApp.Register(keys.AuthKey, authErr)
+
+	errApp.Register(keys.AssetKey, slices.Concat([]err.ErrEntry{
 		{Err: assets.ErrAssetNotFound, Code: assets.CodeAssetNotFound, StatusCode: 404, Message: "Asset not found"},
 		{Err: assets.ErrAssetAlreadyExists, Code: assets.CodeAssetAlreadyExists, StatusCode: 400, Message: "Asset already exists"},
 		{Err: assets.ErrAssetInvalidMime, Code: assets.CodeAssetInvalidMime, StatusCode: 400, Message: "Invalid mime"},
@@ -43,8 +46,8 @@ func NewErrRegistry(keys RegisterErr) *err.ErrApp {
 		{Err: assets.ErrAssetFailedUpdate, Code: assets.CodeAssetFailedUpdate, StatusCode: 500, Message: "Asset failed update"},
 		{Err: assets.ErrAssetFailedDelete, Code: assets.CodeAssetFailedDelete, StatusCode: 500, Message: "Asset failed delete"},
 		{Err: assets.ErrAssetInvalidPath, Code: assets.CodeAssetInvalidPath, StatusCode: 400, Message: "Asset invalid path"},
-	})
-	errApp.Register(keys.ProfileKey, []err.ErrEntry{
+	}, authErr))
+	errApp.Register(keys.ProfileKey, slices.Concat([]err.ErrEntry{
 		{Err: profile.ErrNotFound, Code: profile.CodeUserNotFound, StatusCode: 404, Message: "User not found"},
 		{Err: profile.ErrTagAlreadyAssigned, Code: profile.CodeTagAlreadyAssigned, StatusCode: 400, Message: "Tag already assigned"},
 		{Err: profile.ErrInvalidUsername, Code: profile.CodeInvalidUsername, StatusCode: 400, Message: "Invalid username"},
@@ -53,8 +56,8 @@ func NewErrRegistry(keys RegisterErr) *err.ErrApp {
 		{Err: auth.ErrUnauthorized, Code: auth.CodeUnauthorized, StatusCode: 401, Message: "Unauthorized"},
 		{Err: auth.ErrTokenInvalid, Code: auth.CodeTokenInvalid, StatusCode: 401, Message: "Invalid token"},
 		{Err: auth.ErrTokenExpired, Code: auth.CodeTokenExpired, StatusCode: 401, Message: "Token expired"},
-	})
-	errApp.Register(keys.ArticleKey, []err.ErrEntry{
+	}, authErr))
+	errApp.Register(keys.ArticleKey, slices.Concat([]err.ErrEntry{
 		{Err: article.ErrNotFound, Code: article.CodeNotFound, StatusCode: 404, Message: "Article not found"},
 		{Err: article.ErrInvalidID, Code: article.CodeInvalidID, StatusCode: 400, Message: "Article ID is required"},
 		{Err: article.ErrDuplicateSlug, Code: article.CodeDuplicate, StatusCode: 400, Message: "Article slug already exists"},
@@ -63,6 +66,6 @@ func NewErrRegistry(keys RegisterErr) *err.ErrApp {
 		{Err: article.ErrForbidden, Code: article.CodeForbidden, StatusCode: 403, Message: "Not the owner of this article"},
 		{Err: article.ErrInvalidInput, Code: article.CodeInvalidInput, StatusCode: 400, Message: "Invalid input"},
 		{Err: article.ErrBadRequest, Code: article.CodeBadRequest, StatusCode: 400, Message: "Bad Request"},
-	})
+	}, authErr))
 	return errApp
 }

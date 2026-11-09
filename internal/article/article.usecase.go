@@ -2,8 +2,8 @@ package article
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -26,15 +26,15 @@ func (uc *usecase) Create(ctx context.Context, in CreateInput) (*ArticleEntity, 
 	}
 	title := strings.TrimSpace(in.Title)
 	if title == "" {
-		return nil, ErrBadRequest
+		return nil, errors.New("title cannot be empty")
 	}
 	slug := slugify(in.Title)
 
 	if strings.TrimSpace(in.Content) == "" && in.URL == "" {
-		return nil, ErrBadRequest
+		return nil, errors.New("content cannot be empty without URL")
 	}
 	if strings.TrimSpace(in.Category) == "" {
-		return nil, ErrBadRequest
+		return nil, errors.New("title cannot be empty without category")
 	}
 
 	taken, err := uc.repo.ExistsBySlug(ctx, slug, "")
@@ -152,9 +152,6 @@ func (uc *usecase) Delete(ctx context.Context, authorID string, id string) error
 
 func (uc *usecase) GetBySlug(ctx context.Context, slug string, viewerID string) (*ArticleEntity, error) {
 	a, err := uc.repo.FindBySlug(ctx, slug)
-	log.Println("Article:", a)
-	log.Println("Article:", err)
-	log.Println("Article:", slug)
 	if err != nil {
 		return nil, err
 	}
@@ -169,10 +166,13 @@ func (uc *usecase) GetBySlug(ctx context.Context, slug string, viewerID string) 
 
 // ---------- GetBySlug ----------
 
-func (uc *usecase) GetByID(ctx context.Context, ID string) (*ArticleEntity, error) {
+func (uc *usecase) GetByID(ctx context.Context, ID string, viewerID string) (*ArticleEntity, error) {
 	a, err := uc.repo.FindByID(ctx, ID)
 	if err != nil {
 		return nil, err
+	}
+	if !uc.isPublished(a) && (viewerID == "" || viewerID != a.AuthorID) {
+		return nil, ErrNotFound
 	}
 	return a, nil
 }

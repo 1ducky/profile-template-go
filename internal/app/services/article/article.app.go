@@ -42,6 +42,7 @@ func (a *ArticleApp) CreateArticle(ctx context.Context, req article.CreateInput)
 		}
 		return a.clearToValidFileKey(key), true
 	})
+	log.Println("filekeys:", filekeys)
 	var articleRes article.ArticleEntity
 	err := a.uow.Do(ctx, func(ctx context.Context, r TXUsecase) error {
 		cratedAt := time.Now()
@@ -106,7 +107,7 @@ func (a *ArticleApp) UpdateArticle(ctx context.Context, req article.UpdateInput)
 	})
 	log.Print(newFileKeys)
 	return a.uow.Do(ctx, func(ctx context.Context, r TXUsecase) error {
-		lastArticle, err := r.Article.GetByID(ctx, req.ID)
+		lastArticle, err := r.Article.GetByID(ctx, req.ID, req.AuthorID)
 		if err != nil {
 			return article.ErrNotFound
 		}
@@ -149,8 +150,28 @@ func (a *ArticleApp) DeleteArticle(ctx context.Context, req article.DeleteReques
 }
 
 func (a *ArticleApp) GetBySlugArticle(ctx context.Context, userID string, slug string) (ArticleResponse, error) {
-	log.Println("app:", slug)
 	res, err := a.artc.GetBySlug(ctx, slug, userID)
+	if err != nil {
+		return ArticleResponse{}, err
+	}
+	author, err := a.profile.GetUserByID(ctx, res.AuthorID)
+	if err != nil {
+		log.Println("error get author:", err)
+		return ArticleResponse{}, err
+	}
+
+	return ArticleResponse{
+		ArticleResponse: article.ToResponse(res),
+		ProfileResource: ProfileResource{
+			Username: author.Username,
+			Tag:      author.Tag,
+			Avatar:   author.AvatarURL,
+			Bio:      author.Bio,
+		},
+	}, err
+}
+func (a *ArticleApp) GetByIdArticle(ctx context.Context, userID string, id string) (ArticleResponse, error) {
+	res, err := a.artc.GetByID(ctx, id, userID)
 	if err != nil {
 		return ArticleResponse{}, err
 	}

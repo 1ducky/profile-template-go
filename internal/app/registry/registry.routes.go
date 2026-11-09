@@ -48,6 +48,7 @@ func routeArticle(mux *http.ServeMux, handler articleApp.Handler, adapter *trans
 	mux.HandleFunc("POST /articles", adapter.Adapt(handler.Create, err.Article))
 	mux.HandleFunc("GET /articles", adapter.Adapt(handler.List, err.Article))
 	mux.HandleFunc("GET /articles/{slug}", adapter.Adapt(handler.GetBySlug, err.Article))
+	mux.HandleFunc("GET /article/{id}", adapter.Adapt(handler.GetByID, err.Article))
 	mux.HandleFunc("PATCH /articles/{id}", adapter.Adapt(handler.Update, err.Article))
 	mux.HandleFunc("DELETE /articles/{id}", adapter.Adapt(handler.Delete, err.Article))
 }

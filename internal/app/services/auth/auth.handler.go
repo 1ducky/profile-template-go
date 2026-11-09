@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"profile-template/internal/auth"
+	"profile-template/internal/contextapp"
 	"profile-template/internal/transport"
 )
 
@@ -66,20 +67,15 @@ func (h Handler) Register(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (h Handler) GetSession(w http.ResponseWriter, r *http.Request) error {
-
-	cookie, err := r.Cookie(transport.CookieSessionName)
-	if err != nil {
+	user, ok := contextapp.GetAuth(r.Context())
+	if !ok {
 		return auth.ErrTokenInvalid
 	}
-
-	res, err := h.AuthApp.GetSession(r.Context(), cookie.Value)
-	if err != nil {
-		return err
+	if user.ID != "" {
+		return auth.ErrUnauthorized
 	}
 
-	w.WriteHeader(http.StatusOK)
-
-	return json.NewEncoder(w).Encode(transport.Response[SessionResource]{Status: transport.StatusSuccess, Data: res})
+	return json.NewEncoder(w).Encode(transport.Response[SessionResource]{Status: transport.StatusSuccess, Data: SessionResource{UserID: user.ID, Email: user.Email, Role: string(user.Role), Version: user.Version}})
 }
 
 func (h Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) error {

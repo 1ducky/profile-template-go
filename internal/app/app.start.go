@@ -5,11 +5,11 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"profile-template/infra/storage/s3"
 	errApp "profile-template/internal/app/err"
 	"profile-template/internal/app/registry"
 	"profile-template/internal/config"
 	"profile-template/internal/db"
-	"profile-template/internal/localstorage"
 	"profile-template/internal/transport"
 	"syscall"
 	"time"
@@ -27,7 +27,7 @@ func StartApp() {
 	if err != nil {
 		panic(err)
 	}
-	bucket, err := localstorage.NewLocalStorage(cfg.StorageConfig)
+	bucket, err := s3.NewS3Storage(ctx, cfg.StorageConfig)
 	log.Print("initalize Storage")
 	if err != nil {
 		panic(err)

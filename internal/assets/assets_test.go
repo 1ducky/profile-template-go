@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"io"
 	"log"
+	S3Storage "profile-template/infra/storage/s3"
 	"profile-template/internal/assets"
 	"profile-template/internal/config"
 	"profile-template/internal/db"
-	"profile-template/internal/localstorage"
 	"profile-template/internal/utils"
 	"testing"
 	"testing/iotest"
@@ -111,7 +111,7 @@ func NewUC(t *testing.T) assets.UsecaseContract {
 	if err != nil {
 		t.Fatal("DB Failed Init", err, conf.DBConfig)
 	}
-	storage, err := localstorage.NewLocalStorage(conf.StorageConfig)
+	storage, err := S3Storage.NewS3Storage(t.Context(), conf.StorageConfig)
 	if err != nil {
 		t.Fatal("Storage Failed Init")
 	}
@@ -198,11 +198,11 @@ func TestUpload(t *testing.T) {
 		FileKey:     "",
 	}, ReadTestPayload{
 		Name:        "NOT_EXISTED_CATEGORY_READ_TEST",
-		ExpectedErr: assets.ErrAssetInvalidPath,
+		ExpectedErr: assets.ErrAssetNotFound,
 		FileKey:     "a1b2c3d4-e5f6-7890-1234-567890abcdef.pdf",
 	}, ReadTestPayload{
 		Name:        "NESTED_FILE_KEY_READ_TEST",
-		ExpectedErr: assets.ErrAssetInvalidPath,
+		ExpectedErr: assets.ErrAssetNotFound,
 		FileKey:     "avatar/document/a1b2c3d4-e5f6-7890-1234-567890abcdef.pdf",
 	})
 

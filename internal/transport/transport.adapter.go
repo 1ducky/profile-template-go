@@ -26,6 +26,9 @@ func (a *Adapter) Adapt(f HandlerFn, domain err.ErrDomain) func(w http.ResponseW
 			if entry.Code == err.InternalErrCode {
 				log.Print("Invariant Detected : ", errReq, " requestid: ", contextapp.GetTraceID(r.Context()))
 			}
+			if entry.StatusCode == 0 {
+				entry.StatusCode = http.StatusOK
+			}
 			w.WriteHeader(entry.StatusCode)
 			json.NewEncoder(w).Encode(ErrorResponse{
 				Code:    string(entry.Code),

@@ -71,7 +71,7 @@ func (h Handler) GetSession(w http.ResponseWriter, r *http.Request) error {
 	if !ok {
 		return auth.ErrTokenInvalid
 	}
-	if user.ID != "" {
+	if user.ID == "" {
 		return auth.ErrUnauthorized
 	}
 
